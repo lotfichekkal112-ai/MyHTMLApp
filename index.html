@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>تطبيق تتبع فتح التسجيل — عين الدفلى</title>
+<meta name="description" content="تطبيق ويب لتتبع فتح تسجيل البطالة - عين الدفلى. إضافة تلاميذ، طباعة، إشعارات صوتية/مرئية، مصادر قابلة للتعديل، إرسال تلغرام." />
+<style>
+:root{
+  --bg:#060607; --panel:#0b0c0f; --gold:#d4af37; --muted:#bdb8a6;
+  --good:#27ae60; --warn:#f39c12; --bad:#e74c3c; --glass:rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;background:linear-gradient(180deg,var(--bg),#040405);font-family:"Cairo","Segoe UI",Tahoma,system-ui,Arial;color:var(--gold);direction:rtl}
+.container{max-width:1200px;margin:18px auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:80px;height:80px;border-radius:12px;background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04));display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--gold);font-size:34px;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+.title{font-size:20px;font-weight:900}
+.subtitle{font-size:12px;color:var(--muted)}
+.clock{font-weight:800;color:var(--gold);font-size:14px;text-align:left}
+.card{background:linear-gradient(180deg,var(--panel),#081018);padding:12px;border-radius:12px;border:1px solid var(--glass);margin-top:12px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.btn{background:var(--gold);border:none;padding:10px 14px;border-radius:10px;font-weight:800;color:#000;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(212,175,55,0.08);color:var(--gold)}
+.small{font-size:13px;color:var(--muted)}
+.statusRow{display:flex;gap:12px;align-items:center}
+.status{padding:12px;border-radius:10px;font-weight:900;font-size:16px;color:#fff;display:flex;justify-content:space-between;align-items:center;min-width:260px}
+.status.red{background:linear-gradient(90deg,var(--bad),#8b101a)}
+.status.yellow{background:linear-gradient(90deg,var(--warn),#b37a12);color:#000}
+.status.green{background:linear-gradient(90deg,var(--good),#046f2a);color:#fff}
+.progressWrap{flex:1;margin-left:8px}
+.progressBar{height:18px;border-radius:10px;background:rgba(255,255,255,0.06);overflow:hidden;position:relative}
+.progressFill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold),#ffd55a);transition:width 1s ease,background-color 1s ease}
+.dateBox{margin-top:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);font-weight:800;color:var(--gold)}
+.section{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
+.left{flex:1;min-width:320px}
+.right{width:420px;min-width:280px}
+.input, textarea, select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:#071018;color:var(--gold);margin-top:8px}
+.textarea-small{height:120px;resize:vertical}
+.list{margin-top:10px;max-height:520px;overflow:auto;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+.personRow{display:flex;gap:8px;align-items:center;padding:12px;border-radius:10px;border-bottom:1px dashed rgba(255,255,255,0.03);background:linear-gradient(90deg, rgba(212,175,55,0.02), transparent)}
+.personInfo{flex:1;text-align:right;max-width:calc(100% - 420px);overflow:hidden}
+.personName{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.personBirth{color:var(--muted);font-size:13px;margin-top:6px}
+.rowActions{display:flex;gap:6px;flex-shrink:0;min-width:420px;justify-content:flex-start;direction:ltr}
+.rowActions .btn{padding:8px 10px;font-size:13px;border-radius:8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:9999;padding:12px}
+.modal.open{display:flex}
+.modal-card{width:100%;max-width:980px;background:#0b0b0f;border-radius:12px;padding:16px;border:1px solid rgba(212,175,55,0.06);color:var(--gold);text-align:right}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.copyBtn{background:transparent;border:1px solid rgba(212,175,55,0.08);padding:6px;border-radius:8px;color:var(--gold);cursor:pointer}
+.printBtn{background:var(--gold);color:#000;border:none;padding:8px;border-radius:8px;cursor:pointer}
+.footer{margin-top:14px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px;text-align:left}
+.notif{position:fixed;bottom:16px;right:16px;background:var(--gold);color:#000;padding:10px 14px;border-radius:12px;display:none;font-weight:900;z-index:2000}
+.smallMuted{color:var(--muted);font-size:12px}
+.srcRow{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.srcRow input{flex:1}
+.srcList{max-height:200px;overflow:auto;padding:6px;border-radius:8px;background:rgba(255,255,255,0.02);margin-top:8px}
+.toggle{display:inline-flex;align-items:center;gap:8px}
+.switch{width:42px;height:24px;background:#333;border-radius:24px;position:relative;cursor:pointer}
+.knob{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;right:3px;transition:right .18s ease}
+.switch.on{background:linear-gradient(90deg,var(--good),#2ecc71)}
+.switch.on .knob{right:21px}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+@media(max-width:900px){
+  .rowActions{min-width:0;flex-wrap:wrap;justify-content:flex-end}
+  .personInfo{max-width:100%}
+  .right{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">📘</div>
+      <div>
+        <div class="title">تتبع فتح تسجيل البطالة — عين الدفلى</div>
+        <div class="subtitle">Company by Lotfi Chekkal</div>
+      </div>
+    </div>
+    <div style="text-align:left">
+      <div id="clock" class="clock">--:--:--</div>
+      <div id="lastCheck" class="smallMuted">آخر فحص: -</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="statusRow">
+      <div id="statusBox" class="status red">🔴 الحالة: لا دلائل</div>
+      <div class="progressWrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="smallMuted">نسبة الدليل</div>
+          <div id="percentText" class="smallMuted">0%</div>
+        </div>
+        <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
+      </div>
+    </div>
+
+    <div id="dateBox" class="dateBox">📅 تاريخ مؤكد للفتح: <span id="confirmedDate" style="color:var(--muted)">غير محدد</span></div>
+
+    <div class="controls">
+      <button id="openAdd" class="btn">➕ إضافة شخص</button>
+      <button id="tgBtn" class="btn ghost">🔔 تفعيل تلغرام</button>
+      <div style="flex:1"></div>
+      <div class="toggle smallMuted">
+        <div id="soundSwitch" class="switch"><div class="knob"></div></div>
+        <div>🔊 صوت الاشعارات</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="left">
+      <div class="card">
+        <div style="font-weight:900">قائمة الأشخاص</div>
+        <div class="smallMuted">عرض: رقم ترتيب — الاسم — تاريخ الميلاد. الأزرار على اليسار.</div>
+        <div id="list" class="list" aria-live="polite"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div style="font-weight:900">سجل مختصر</div>
+        <div id="log" class="list" style="max-height:200px"></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <div style="font-weight:900">مصادر — عين الدفلى (قابلة للتعديل)</div>
+        <div class="note">أضف روابط صفحات/مواقع (صفحات فيسبوك عامة، أخبار محلية، قناة يوتيوب،...) — سيُفحص كل مصدر أوتوماتيكياً.</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="newSource" placeholder="https://...">
+          <button id="addSourceBtn" class="btn">إضافة مصدر</button>
+        </div>
+        <div id="sourcesList" class="srcList"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="runCheck" class="btn">🔍 تحقق الآن</button>
+          <button id="clearLogs" class="btn ghost">مسح السجل</button>
+        </div>
+      </div>
+
+      <div class="card footer" style="margin-top:12px">
+        <div>Developed by Lotfi Chekkal</div>
+        <div class="smallMuted">© 2025 — واجهة داكنة مع ذهبية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="modalAdd" class="modal"><div class="modal-card">
+  <h3 id="addTitle">إضافة شخص</h3>
+  <div class="grid">
+    <div><label>الاسم و اللقب (بالعربية)</label><input id="f_nameAr" class="input"/></div>
+    <div><label>الاسم و اللقب (بالفرنسية)</label><input id="f_nameFr" class="input"/></div>
+    <div><label>تاريخ ومكان الازدياد</label><input id="f_birth" class="input" placeholder="مثال: 01/01/2005"/></div>
+    <div><label>رقم الوكالة</label><input id="f_agency" class="input"/></div>
+    <div><label>الرقم الوطني</label><input id="f_nid" class="input"/></div>
+    <div><label>رقم الحساب الجاري (CCP)</label><input id="f_ccp" class="input"/></div>
+    <div class="full"><label>رقم الهاتف</label><input id="f_phone" class="input"/></div>
+    <div class="full" style="text-align:left">
+      <button id="savePerson" class="btn">💾 حفظ</button>
+      <button id="cancelAdd" class="btn ghost">إلغاء</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- Register / copy modal -->
+<div id="modalInfo" class="modal"><div class="modal-card" id="modalInfoCard"></div></div>
+
+<!-- Library modal (for printing) -->
+<div id="libOverlay" class="modal"><div class="modal-card" id="libModalCard">
+  <h3>معلومات المكتبة قبل الطباعة</h3>
+  <div style="display:grid;grid-template-columns:1fr;gap:8px">
+    <div><label>اسم المكتبة</label><input id="lib-name" class="input" /></div>
+    <div><label>العنوان</label><input id="lib-address" class="input" /></div>
+    <div style="display:flex;gap:8px"><div style="flex:1"><label>الهاتف</label><input id="lib-phone" class="input"/></div><div style="flex:1"><label>البريد</label><input id="lib-email" class="input"/></div></div>
+  </div>
+  <div style="text-align:left;margin-top:12px"><button id="libSave" class="btn">تأكيد الطباعة</button><button id="libCancel" class="btn ghost">إلغاء</button></div>
+</div></div>
+
+<div id="notif" class="notif"></div>
+
+<script>
+/* -------------------------
+   Keys & storage helpers
+   ------------------------- */
+const KEY_PERSONS = 'batala_persons_v2';
+const KEY_CFG = 'batala_cfg_v2';
+const KEY_TG = 'batala_tg_v2';
+const KEY_SOURCES = 'batala_sources_v2';
+const KEY_SOUND = 'batala_sound_v2';
+
+function readJSON(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function writeJSON(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+/* -------------------------
+   UI helpers
+   ------------------------- */
+const $ = id => document.getElementById(id);
+function showNotif(m,ms=3500){ const n=$('notif'); n.textContent=m; n.style.display='block'; setTimeout(()=> n.style.display='none', ms); }
+function pushLog(m){ const cfg = readJSON(KEY_CFG, {}); cfg.logs = cfg.logs || []; cfg.logs.unshift({t: new Date().toISOString(), m}); cfg.logs = cfg.logs.slice(0,300); writeJSON(KEY_CFG, cfg); renderLog(); }
+
+function renderLog(){ const cfg = readJSON(KEY_CFG, {}); const logs = cfg.logs || []; $('log').innerHTML = logs.map(x=>`<div style="padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03)">${new Date(x.t).toLocaleString()} — ${x.m}</div>`).join('') }
+
+/* -------------------------
+   Clock
+   ------------------------- */
+function updateClock(){ $('clock').textContent = new Date().toLocaleTimeString('fr-FR'); }
+setInterval(updateClock,1000); updateClock();
+
+/* -------------------------
+   Persons management
+   ------------------------- */
+let persons = readJSON(KEY_PERSONS, []);
+let editingIndex = -1;
+
+function renderList(filter=''){
+  const list = $('list'); list.innerHTML='';
+  const q = (filter||'').toLowerCase();
+  persons.forEach((p,i)=>{
+    const combined = ((p.nameAr||'')+' '+(p.birth||'')+' '+(p.nameFr||'')).toLowerCase();
+    if(q && !combined.includes(q)) return;
+    const row = document.createElement('div'); row.className='personRow';
+    row.innerHTML = `<div class="personInfo"><div class="personName">#${i+1} — ${escapeHtml(p.nameAr)}</div><div class="personBirth">${escapeHtml(p.birth)}</div></div>
+    <div class="rowActions">
+      <button class="btn" title="تسجيل" onclick="openRegister(${i})">🌐</button>
+      <button class="btn" title="طباعة" onclick="startPrint(${i})">🖨️</button>
+      <button class="btn ghost" title="تعديل" onclick="editPerson(${i})">✏️</button>
+      <button class="btn ghost" title="حذف" onclick="deletePerson(${i})">🗑️</button>
+    </div>`;
+    list.appendChild(row);
+  });
+}
+function savePersons(){ writeJSON(KEY_PERSONS, persons); renderList(); }
+function clearAddFields(){ ['f_nameAr','f_nameFr','f_birth','f_agency','f_nid','f_ccp','f_phone'].forEach(id=>$(id).value='') }
+
+$('openAdd').onclick = ()=>{ editingIndex=-1; $('addTitle').textContent='إضافة شخص'; clearAddFields(); openModal('modalAdd'); }
+$('cancelAdd').onclick = ()=>{ closeModal('modalAdd'); editingIndex=-1; }
+
+$('savePerson').onclick = ()=>{
+  const person = {
+    id: editingIndex>=0 ? persons[editingIndex].id : Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+    nameAr: $('f_nameAr').value.trim(),
+    nameFr: $('f_nameFr').value.trim(),
+    birth: $('f_birth').value.trim(),
+    agency: $('f_agency').value.trim(),
+    nid: $('f_nid').value.trim(),
+    ccp: $('f_ccp').value.trim(),
+    phone: $('f_phone').value.trim(),
+    created: new Date().toISOString()
+  };
+  if(!person.nameAr || !person.birth){ alert('رجاءً املأ الاسم وتاريخ الميلاد'); return; }
+  if(editingIndex>=0){ persons[editingIndex]=person; pushLog('تعديل: '+person.nameAr); } else { persons.unshift(person); pushLog('إضافة: '+person.nameAr); }
+  savePersons(); closeModal('modalAdd');
+}
+function editPerson(i){ editingIndex=i; const p=persons[i]; $('addTitle').textContent='تعديل شخص'; $('f_nameAr').value=p.nameAr; $('f_nameFr').value=p.nameFr; $('f_birth').value=p.birth; $('f_agency').value=p.agency; $('f_nid').value=p.nid; $('f_ccp').value=p.ccp; $('f_phone').value=p.phone; openModal('modalAdd'); }
+function deletePerson(i){ if(confirm('هل تريد حذف هذا الشخص؟')){ pushLog('حذف: '+persons[i].nameAr); persons.splice(i,1); savePersons(); } }
+
+/* -------------------------
+   Modal helpers
+   ------------------------- */
+function openModal(id){ $(id).classList.add('open'); }
+function closeModal(id){ $(id).classList.remove('open'); }
+
+/* -------------------------
+   Register modal & copying
+   ------------------------- */
+function openRegister(i){
+  const p = persons[i];
+  const card = $('modalInfoCard');
+  card.innerHTML = `<h3>تسجيل: ${escapeHtml(p.nameAr)}</h3><div style="text-align:right;line-height:1.6">
+  <div>الاسم (ع): ${escapeHtml(p.nameAr)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.nameAr)}')">نسخ</button></div>
+  <div>الاسم (fr): ${escapeHtml(p.nameFr)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.nameFr)}')">نسخ</button></div>
+  <div>تاريخ/مكان: ${escapeHtml(p.birth)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.birth)}')">نسخ</button></div>
+  <div>رقم الوكالة: ${escapeHtml(p.agency)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.agency)}')">نسخ</button></div>
+  <div>الرقم الوطني: ${escapeHtml(p.nid)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.nid)}')">نسخ</button></div>
+  <div>CCP: ${escapeHtml(p.ccp)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.ccp)}')">نسخ</button></div>
+  <div>الهاتف: ${escapeHtml(p.phone)} <button class="copyBtn" onclick="copyText('${escapeForJs(p.phone)}')">نسخ</button></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    <button class="btn" onclick="copyAll(${i})">نسخ كل الحقول</button>
+    <button class="btn" onclick="openRegistrationSite()">فتح موقع التسجيل</button>
+    <button class="btn ghost" onclick="closeInfo()">إغلاق</button>
+  </div></div>`;
+  $('modalInfo').classList.add('open');
+  pushLog('عرض نافذة تسجيل: '+p.nameAr);
+}
+function closeInfo(){ $('modalInfo').classList.remove('open'); }
+function copyText(t){ navigator.clipboard.writeText(t).then(()=> showNotif('تم النسخ')); }
+function copyAll(i){ const p=persons[i]; const str=`${p.nameAr}\n${p.nameFr}\n${p.birth}\n${p.agency}\n${p.nid}\n${p.ccp}\n${p.phone}`; navigator.clipboard.writeText(str).then(()=> showNotif('تم نسخ كل الحقول')); }
+function openRegistrationSite(){ window.open('https://minha.anem.dz/pre_inscription','_blank'); }
+
+/* -------------------------
+   Library print modal & classic print
+   ------------------------- */
+function ensureLibraryModal(){ /* lib overlay already in DOM */ }
+function startPrint(i){
+  ensureLibraryModal();
+  const cfg = readJSON(KEY_CFG, {});
+  $('lib-name').value = cfg.libName || 'مكتبة نور تبركانين';
+  $('lib-address').value = cfg.libAddress || '';
+  $('lib-phone').value = cfg.libPhone || '';
+  $('lib-email').value = cfg.libEmail || '';
+  sessionStorage.setItem('__print_person_index', i.toString());
+  $('libOverlay').classList.add('open');
+  pushLog('فتح نافذة طباعة لمراجعة معلومات المكتبة');
+}
+$('libCancel').onclick = ()=>{ $('libOverlay').classList.remove('open'); }
+$('libSave').onclick = confirmPrint;
+function confirmPrint(){
+  const name = $('lib-name').value.trim(); const addr=$('lib-address').value.trim(); const phone=$('lib-phone').value.trim(); const email=$('lib-email').value.trim();
+  const cfg = readJSON(KEY_CFG, {}); cfg.libName = name; cfg.libAddress = addr; cfg.libPhone = phone; cfg.libEmail = email; writeJSON(KEY_CFG, cfg);
+  const idx = parseInt(sessionStorage.getItem('__print_person_index'),10);
+  if(isNaN(idx) || !persons[idx]){ showNotif('لم يتم اختيار شخص للطباعة'); return; }
+  const p = persons[idx];
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طباعة - ${escapeHtml(p.nameAr)}</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;direction:rtl;color:#000;padding:24px} h1{font-size:20px;margin:0 0 6px 0} .meta{margin-top:14px;font-size:16px} .meta b{display:inline-block;width:140px}</style></head><body>
+  <div style="text-align:center"><h1>${escapeHtml(cfg.libName || 'مكتبة')}</h1><div>${escapeHtml(cfg.libAddress || '')}</div><div>${escapeHtml(cfg.libPhone || '')} — ${escapeHtml(cfg.libEmail || '')}</div></div>
+  <hr>
+  <h2 style="text-align:center;margin-top:18px">معلومات التلميذ</h2>
+  <div class="meta"><div><b>الاسم (ع):</b> ${escapeHtml(p.nameAr)}</div>
+  <div><b>الاسم (fr):</b> ${escapeHtml(p.nameFr)}</div>
+  <div><b>تاريخ/مكان الازدياد:</b> ${escapeHtml(p.birth)}</div>
+  <div><b>رقم الوكالة:</b> ${escapeHtml(p.agency)}</div>
+  <div><b>الرقم الوطني:</b> ${escapeHtml(p.nid)}</div>
+  <div><b>CCP:</b> ${escapeHtml(p.ccp)}</div>
+  <div><b>الهاتف:</b> ${escapeHtml(p.phone)}</div></div>
+  <footer style="margin-top:30px;font-size:12px">Developed by Lotfi Chekkal — ${new Date().toLocaleString()}</footer>
+  </body></html>`;
+  const w = window.open('','_blank','width=900,height=700'); w.document.write(html); w.document.close(); w.focus(); setTimeout(()=> w.print(), 500);
+  $('libOverlay').classList.remove('open');
+  pushLog('طباعة: '+p.nameAr);
+}
+
+/* -------------------------
+   Sources management
+   ------------------------- */
+let sources = readJSON(KEY_SOURCES, []);
+function renderSources(){
+  const wrap = $('sourcesList');
+  wrap.innerHTML = '';
+  sources.forEach((s,i)=>{
+    const div = document.createElement('div'); div.className='srcRow';
+    div.innerHTML = `<input readonly value="${escapeHtml(s)}"><button class="btn ghost" onclick="removeSource(${i})">حذف</button>`;
+    wrap.appendChild(div);
+  });
+  if(sources.length===0) wrap.innerHTML = '<div class="smallMuted">لم تقم بإضافة مصادر بعد.</div>';
+}
+$('addSourceBtn').addEventListener('click', ()=>{
+  const v = $('newSource').value.trim();
+  if(!v) return showNotif('أدخل رابط مصدر');
+  sources.unshift(v); writeJSON(KEY_SOURCES,sources); $('newSource').value=''; renderSources(); pushLog('أضف مصدر: '+v);
+});
+function removeSource(i){ if(confirm('حذف المصدر؟')){ pushLog('حذف مصدر: '+sources[i]); sources.splice(i,1); writeJSON(KEY_SOURCES,sources); renderSources(); }}
+
+/* -------------------------
+   Check engine
+   ------------------------- */
+const KEYWORDS = ['فتح التسجيل','التسجيل مفتوح','انطلاق التسجيل','بدء التسجيل','inscription ouverte','début inscription','pre_inscription','minha','بطالة','تسجيل البطالة','عين الدفلى','ain defla'];
+const CORS = 'https://api.allorigins.win/raw?url='; // fallback proxy
+async function fetchText(url){
+  try{
+    let res;
+    try { res = await fetch(url, {cache:'no-store'}); if(res.ok) return await res.text(); } catch(e){}
+    res = await fetch(CORS + encodeURIComponent(url), {cache:'no-store'});
+    if(res.ok) return await res.text();
+    return '';
+  }catch(e){ return ''; }
+}
+function extractDateFromText(text){
+  const p1 = /\b([0-3]?\d)[\/\-\.\s]([01]?\d)[\/\-\.\s](20\d{2})\b/g;
+  let m;
+  while((m=p1.exec(text))!==null){ return `${m[1]}/${m[2]}/${m[3]}`; }
+  const p2 = /\b(20\d{2})[\/\-\.\s]?([01]?\d)[\/\-\.\s]?([0-3]?\d)\b/g;
+  while((m=p2.exec(text))!==null){ return `${m[3]}/${m[2]}/${m[1]}`; }
+  const monthsAr = ['يناير','فبراير','مارس','أبريل','ماي','مايو','يونيو','يونية','يوليو','أغسطس','اغسطس','سبتمبر','اكتوبر','أكتوبر','نوفمبر','ديسمبر'];
+  const p3 = new RegExp(`\\b([0-3]?\\d)\\s*(${monthsAr.join('|')})(?:\\s*(20\\d{2}))?`,'i');
+  m = p3.exec(text);
+  if(m) return `${m[1]} ${m[2]} ${m[3]||''}`.trim();
+  return null;
+}
+
+async function runCheck(allowNotify=true){
+  const sList = sources.slice();
+  if(sList.length===0){ showNotif('لا توجد مصادر — أضف مصادر للفحص'); return; }
+  $('lastCheck').textContent = new Date().toLocaleString();
+  pushLog('بدء الفحص — '+sList.length+' مصدر');
+  let hits=0, total=sList.length, foundDates=[];
+  for(const s of sList){
+    try{
+      const txt = await fetchText(s);
+      if(!txt){ pushLog('مصدر لا يستجيب: '+s); continue; }
+      const low = txt.toLowerCase();
+      const matched = KEYWORDS.some(k => low.includes(k));
+      if(matched){ hits++; const d = extractDateFromText(txt); if(d) foundDates.push(d); pushLog('دلائل من: '+s); } else pushLog('لا دلائل من: '+s);
+    }catch(e){ pushLog('خطأ فحص: '+s); }
+    await new Promise(r => setTimeout(r,200));
+  }
+  const percent = total? Math.round((hits/total)*100):0;
+  updateProgress(percent);
+  if(foundDates.length) {
+    const freq = {}; foundDates.forEach(d=> freq[d] = (freq[d]||0)+1);
+    const sorted = Object.keys(freq).sort((a,b)=> freq[b]-freq[a] || a.localeCompare(b));
+    $('confirmedDate').textContent = sorted[0];
+  } else $('confirmedDate').textContent = 'غير محدد';
+  if(percent>=90){ setStatus('green','🟢 الموقع مفتوح — دلائل قوية'); if(allowNotify) notifyOpen($('confirmedDate').textContent); }
+  else if(percent>=50) setStatus('yellow','🟡 الحالة غير مؤكدة — دلائل متوسطة');
+  else setStatus('red','🔴 لا دلائل كافية — الموقع مغلق غالباً');
+  pushLog('انتهى الفحص — نسبة: '+percent+'%');
+}
+
+function updateProgress(p){ $('progressFill').style.width = p+'%'; $('percentText').textContent = p+'%'; if(p>=90) $('progressFill').style.background='linear-gradient(90deg,var(--good),#6ef7a1)'; else if(p>=60) $('progressFill').style.background='linear-gradient(90deg,var(--warn),#ffd55a)'; else $('progressFill').style.background='linear-gradient(90deg,var(--gold),#ffd55a)'; }
+function setStatus(c,t){ const b=$('statusBox'); b.classList.remove('red','yellow','green'); b.classList.add(c); b.textContent=t; }
+
+/* start periodic check every 60s */
+$('runCheck').addEventListener('click', ()=> runCheck(true));
+setTimeout(()=> runCheck(false), 3000);
+setInterval(()=> runCheck(false), 60*1000);
+
+/* -------------------------
+   Telegram integration
+   ------------------------- */
+$('tgBtn').addEventListener('click', ()=> {
+  const cur = localStorage.getItem(KEY_TG) || '';
+  const inpu = prompt('أدخل token|chatId (مثال: 123456:ABCdef...|987654321)\nالقيمة الحالية محفوظة محلياً:', cur || '');
+  if(inpu === null) return;
+  if(inpu.trim()){ localStorage.setItem(KEY_TG, inpu.trim()); showNotif('تم حفظ بيانات التلغرام محلياً'); pushLog('حفظ إعداد تلغرام'); } else { localStorage.removeItem(KEY_TG); showNotif('تم حذف بيانات التلغرام'); }
+});
+function sendTelegram(msg){
+  const val = localStorage.getItem(KEY_TG) || '';
+  if(!val) return;
+  const [token, chat] = val.split('|').map(x=>x.trim());
+  if(!token||!chat) return;
+  try{
+    fetch(`https://api.telegram.org/bot${encodeURIComponent(token)}/sendMessage`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chat,text:msg})
+    }).then(r=>{ if(r.ok) showNotif('إشعار تلغرام أُرسل'); else showNotif('فشل إرسال تلغرام'); }).catch(()=> showNotif('فشل إرسال تلغرام'));
+  }catch(e){ /* ignore */ }
+}
+
+/* -------------------------
+   Notifications & sound
+   ------------------------- */
+function notifyOpen(date){
+  const msg = `فتح التسجيل محتمل${date && date!=='غير محدد'? ' — تاريخ: '+date : ''}`;
+  try{
+    if("Notification" in window){
+      if(Notification.permission==='granted') new Notification(msg);
+      else if(Notification.permission!=='denied') Notification.requestPermission().then(p=>{ if(p==='granted') new Notification(msg); });
+    }
+  }catch(e){}
+  sendTelegram(msg);
+  showNotif(msg,7000);
+  if(readJSON(KEY_SOUND,true)) playNotifyTone();
+}
+
+/* WebAudio tones */
+let audioCtx = null;
+function ensureAudio(){ if(audioCtx) return audioCtx; audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+function playNotifyTone(){ try{ const ctx = ensureAudio(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0; o.connect(g); g.connect(ctx.destination); const now = ctx.currentTime; g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.12, now+0.02); o.start(now); o.frequency.exponentialRampToValueAtTime(1320, now+0.25); g.gain.exponentialRampToValueAtTime(0.0001, now+0.7); setTimeout(()=> o.stop(),900);}catch(e){}}
+function playEntranceTone(){ try{ const ctx = ensureAudio(); const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(); const g = ctx.createGain(); g.gain.value=0; o1.type='sine'; o1.frequency.value=220; o2.type='sine'; o2.frequency.value=440; o1.connect(g); o2.connect(g); g.connect(ctx.destination); const now = ctx.currentTime; g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.18, now+0.12); o1.start(now); o2.start(now+0.03); o1.frequency.exponentialRampToValueAtTime(660, now+0.8); o2.frequency.exponentialRampToValueAtTime(1320, now+0.8); g.gain.exponentialRampToValueAtTime(0.0001, now+1.2); setTimeout(()=>{ try{o1.stop(); o2.stop();}catch(e){} },1400);}catch(e){}}
+
+/* sound switch UI */
+function setSoundUI(on){ const sw = $('soundSwitch'); if(on) sw.classList.add('on'); else sw.classList.remove('on'); writeJSON(KEY_SOUND, !!on); }
+$('soundSwitch').addEventListener('click', ()=>{ const on = !$('soundSwitch').classList.contains('on'); setSoundUI(on); showNotif(on? 'تم تفعيل الصوت':'تم تعطيل الصوت'); });
+setSoundUI(readJSON(KEY_SOUND,true));
+window.addEventListener('load', ()=>{ setTimeout(()=>{ try{ playEntranceTone(); }catch(e){} }, 300); });
+
+/* -------------------------
+   Utilities
+   ------------------------- */
+function escapeHtml(s){ if(!s) return ''; return s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeForJs(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n'); }
+
+/* -------------------------
+   Initial render & persistence
+   ------------------------- */
+renderList();
+renderSources();
+renderLog();
+window.addEventListener('beforeunload', ()=>{ writeJSON(KEY_PERSONS, persons); writeJSON(KEY_SOURCES, sources); });
+
+/* -------------------------
+   Buttons: clear logs
+   ------------------------- */
+$('clearLogs').addEventListener('click', ()=>{ if(confirm('مسح سجل الأحداث؟')){ const cfg = readJSON(KEY_CFG,{}); cfg.logs = []; writeJSON(KEY_CFG,cfg); renderLog(); showNotif('تم مسح السجل'); } });
+
+/* expose some functions globally used by inline handlers */
+window.openRegister = openRegister;
+window.startPrint = startPrint;
+window.editPerson = editPerson;
+window.deletePerson = deletePerson;
+window.copyText = copyText;
+window.copyAll = copyAll;
+
+/* -------------------------
+   register site helper that keeps modal open
+   ------------------------- */
+function registerSite(i){
+  openRegister(i);
+  window.open('https://minha.anem.dz/pre_inscription','_blank');
+}
+window.registerSite = registerSite;
+
+/* -------------------------
+   Load default example sources if empty
+   ------------------------- */
+if(sources.length===0){
+  sources = [
+    'https://www.mtess.gov.dz',
+    'https://www.aps.dz',
+    'https://www.elkhabar.com',
+    'https://news.google.com/search?q=عين+الدفلى+تسجيل+البطالة'
+  ];
+  writeJSON(KEY_SOURCES,sources);
+  renderSources();
+}
+
+/* -------------------------
+   allow clicking outside modals to close
+   ------------------------- */
+document.addEventListener('click', (e)=>{
+  document.querySelectorAll('.modal.open').forEach(m=>{
+    if(m===e.target) m.classList.remove('open');
+  });
+});
+
+/* -------------------------
+   Utility: manual runCheck exposure
+   ------------------------- */
+window.runCheck = runCheck;
+
+/* End script */
+</script>
+</body>
+</html>
+```0
